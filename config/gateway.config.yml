@@ -1,0 +1,99 @@
+http:
+  port: 8080
+# admin:
+#   port: 9876
+#   host: localhost
+https:
+  port: 9443
+  hostname: localhost
+  # tls:
+  #   "*.demo.io":
+  #       key: example/keys/demo.io.key.pem
+  #       cert: example/keys/demo.io.cert.pem
+  #   "api.acme.com":
+  #       key: example/keys/acme.com.key.pem
+  #       cert: example/keys/acme.com.cert.pem
+  #   "default":
+  #       key: example/keys/eg.io.key.pem
+  #       cert: example/keys/eg.io.cert.pem
+apiEndpoints:
+  api:
+    host: localhost
+    paths: "/ip"
+  user:
+    host: localhost
+    paths: "/*"
+  music:
+    methods: 'GET,POST,PUT' 
+    host: localhost
+    paths: "/*"
+
+serviceEndpoints:
+  httpbin:
+    url: "https://httpbin.org"
+  userService:
+    url: "http://localhost:6600"
+  musicService:
+    url: "http://localhost:4001"
+policies:
+  - basic-auth
+  - cors
+  - expression
+  - key-auth
+  - log
+  - oauth2
+  - proxy
+  - rate-limit
+pipelines:
+  default:
+    apiEndpoints:
+      - api
+      - user
+      - music
+    policies:
+      - cors:
+        - action:
+            origin: '*'
+            credentials: true
+            methods: ['GET','POST','PUT','DELETE']
+            allowedHeaders: ['Content-type','Authorization','Origin','Access-Control-Allow-Origin','Origin', 'Accept', 'X-Requested-With', 'Content-Type', 'Access-Control-Request-Method', 'Access-Control-Request-Headers','Authorization', 'Access-Control-Allow-Origin','X-TEST']
+            exposedHeaders : ['Content-type','Authorization','Origin','Access-Control-Allow-Origin','Origin', 'Accept', 'X-Requested-With', 'Content-Type', 'Access-Control-Request-Method', 'Access-Control-Request-Headers','Authorization', 'Access-Control-Allow-Origin','X-TEST']
+            preflightContinue: true
+  #   # Uncomment `key-auth:` when instructed to in the Getting Started guide.
+  #   # - key-auth:
+  #     - proxy:
+  #         - action:
+  #             serviceEndpoint: httpbin
+  #             changeOrigin: true
+  #  - name: veoAPI
+  bin:
+    apiEndpoints:
+      - api
+    policies:
+      #  - expression:
+      #   - action:
+      #       jscode: |
+      #         if (req.url.startsWith('/discussions')) {
+      #           const slug = req.url.substr('/discussions'.length);
+      #           req.url = '/d' + slug;
+      #         }
+      #  - key-auth: # this is intentionaly disabled to allow temporary access
+      - proxy:
+          - action:
+              serviceEndpoint: httpbin
+              changeOrigin: true
+  user:
+    apiEndpoints:
+      - user
+    policies:
+      - proxy:
+          - action:
+              serviceEndpoint: userService
+  music:
+    apiEndpoints:
+      - music
+    policies:
+      - proxy:
+          - action:
+              serviceEndpoint: musicService
+              # changeOrigin: true
